@@ -87,6 +87,14 @@ private:
 
     // output filename
     std::string outputFile;
+    
+    // CUSTOM{
+    // input filename
+    std::string input_filename;
+    
+    // output filepath
+    std::string image_fpath;
+    // }
 
 public:
 
@@ -177,6 +185,8 @@ public:
 
     // to grab (and process) the frames of the sequence
     void run();
+    
+    void setOutputFilePath(std::string);
 
 };
 

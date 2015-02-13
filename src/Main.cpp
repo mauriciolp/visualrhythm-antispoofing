@@ -96,6 +96,13 @@ void computeVisualRhythm(int kernel_size, int visual_rhythm_type, int frame_numb
     VisualRhythm visualrhythm;
 
     processor.setInput(video_filename.c_str());
+    
+    // CUSTOM {
+    processor.setOutputFilePath(image_fname.c_str());
+    // }
+    
+    // TODO resize frame so Height is at 500
+    
     processor.setFrameProcessor(&visualrhythm);
     processor.setFrameToStop(frame_number);
     processor.setDelay(1000. / processor.getFrameRate());
@@ -117,7 +124,7 @@ void computeVisualRhythm(int kernel_size, int visual_rhythm_type, int frame_numb
         cout << "Ok!" << endl;
 
         cout << "Saving the generated visual rhythm ... ";
-        visualrhythm.saveVisualRhythm();
+        //~ visualrhythm.saveVisualRhythm();
         cout << "Ok!" << endl;
 
     } else if (visual_rhythm_type == 1) {

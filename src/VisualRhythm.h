@@ -162,6 +162,11 @@ public:
 
     // Saves the computed visual rhythm
     void saveVisualRhythm();
+    
+    // CUSTOM{
+    int getHeight();
+    int getWidth();
+    //}
 
 };
 

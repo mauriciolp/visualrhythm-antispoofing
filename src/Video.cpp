@@ -16,6 +16,7 @@
 \*------------------------------------------------------------------------------------------------*/
 
 #include "Video.h"
+#include "VisualRhythm.h"
 using namespace std;
 using namespace cv;
 
@@ -35,6 +36,9 @@ Video::~Video() {
 bool Video::setInput(string filename) {
     fnumber = 0;
     capture.release();
+
+    // CUSTOM
+    input_filename = filename;
     return capture.open(filename);
 }
 
@@ -191,44 +195,157 @@ void Video::writeNextFrame(cv::Mat& frame) {
     writer.write(frame);
 }
 
+void Video::setOutputFilePath(std::string image_fpath) {
+	this->image_fpath = image_fpath;
+}
+
 void Video::run() {
 
     cv::Mat frame;
     cv::Mat output;
+    
+    // CUSTOM {
+    int total_vr, curr_vr=1, stride=50, window_size=10, window_begin;
+    ostringstream convert;   // stream used for the conversion of int to str
+    std::string output_file;
+    // }
 
     if (!isOpened())
         return;
 
     stop = false;
+    
+    // do a while already dividing getTotalFrameCount/50 = total_VR?
+    // decision if should stop before last window is getTotalFrameCount%50 > 10 (window size)
+    // curr_VR = 1
+    
+    // *Create a flag for this new type of proccess, and mantain funcionalities*
+    
+    total_vr = getTotalFrameCount()/stride;
+    window_begin = (curr_vr-1)*stride + 1;
+    
+	//~ cout << "\n window_begin: " << window_begin << '\n';
+	//~ cout << "\n window_end: " << window_begin + window_size << '\n';
+    //~ 
+    //~ cout << "\n getTotalFrameCount: " << getTotalFrameCount() << '\n';
+    //~ cout << "\n stride: " << stride << '\n';
+    //~ cout << "\n total_vr: " << total_vr << '\n';
 
-    while (!isStopped()) {
-
+    while (curr_vr <= total_vr) {
+		
         if (!readNextFrame(frame))
             break;
+            
+        //~ cout << "\n getFrameNumber: " << getFrameNumber();
 
         if (windowNameInput.length() != 0)
             cv::imshow(windowNameInput, frame);
 
-        if (callIt) {
-            if (processo)
-                processo(frame, output);
-            else if (frameProcessor)
-                frameProcessor->process(frame, output);
+		//~ cout << "\n Entrou";
+		// window_end = window_begin + window_size
+		
+		if (window_begin <= getFrameNumber() and getFrameNumber() 
+			< window_begin + window_size){
+				
+			//~ cout << "\n getFrameNumber: " << getFrameNumber();
+			
+			if (callIt) {
+				if (processo)
+					processo(frame, output);
+				else if (frameProcessor)
+					frameProcessor->process(frame, output);
+			} else {
+				output = frame;
+			}
+			
+			//~ cout << "\n Passou pelo if (callIt)";
+			
+			if (outputFile.length() != 0)
+				writeNextFrame(output);
 
-        } else {
-            output = frame;
-        }
+			if (windowNameOutput.length() != 0)
+				cv::imshow(windowNameOutput, output);
 
-        if (outputFile.length() != 0)
-            writeNextFrame(output);
+			if (delay >= 0 && cv::waitKey(delay) >= 0)
+				stopIt();
+		}
+		
+		if (getFrameNumber() >= window_begin + window_size){
+			//~ cout << "\n curr_vr: " << curr_vr << '\n';
+			//~ cout << "\n window_begin: " << window_begin << '\n';
+			//~ cout << "\n window_end: " << window_begin + window_size << '\n';
+			
+			convert.str("");
+			convert.clear();
+			convert << curr_vr;      // insert the textual representation of 'Number' in the characters in the stream
+			
+			// TODO format input_filename to get only the file.
+			// For evaluation only, the parameter input_filename must be the name exactly of the file
+			// a gambs would be replace the '/' by '_', so it could be created the file
+			
+			// Temporary workaround for replacing '/' for '_' in input file name
+			std::size_t found = input_filename.rfind('/');
+			while (found!=std::string::npos){
+				input_filename.replace (found,1,"_");
+				found = input_filename.rfind('/');
+			}
 
-        if (windowNameOutput.length() != 0)
-            cv::imshow(windowNameOutput, output);
+			//~ cout << "\n image_fpath: " << image_fpath << '\n';
+			//~ cout << "\n input_filename: " << input_filename << '\n';
+			//~ cout << "\n curr_vr: " << convert.str() << '\n';
+			
+			// TODO insert curr_vr before extension of output OR static png
+			
+			output_file = image_fpath + "/" + input_filename + "_" + convert.str() + ".png";
+			
+			//~ cout << '\n' << output_file;
+			
+			VisualRhythm *vr;
+			
+			vr = (VisualRhythm*) frameProcessor;
+			
+			vr->setOutputFileName(output_file.c_str() );
+			vr->saveVisualRhythm();
+			
+			//~ cout << "\n vr->getHeight(): " << vr->getHeight() << '\n';
+			//~ cout << "\n vr->getWidth(): " << vr->getWidth() << '\n';
+			//~ cout << "\n frameToStop: " << frameToStop << '\n';
 
-        if (delay >= 0 && cv::waitKey(delay) >= 0)
-            stopIt();
-
-        if (frameToStop >= 0 && getFrameNumber() == frameToStop)
-            stopIt();
+			vr->createVisualRhythm(Mat(vr->getHeight(), vr->getWidth() * frameToStop, CV_8U));
+			
+			curr_vr++;
+			window_begin = (curr_vr-1)*stride + 1;
+		}
     }
+    
+    //~ while (!isStopped()) {
+//~ 
+        //~ if (!readNextFrame(frame))
+            //~ break;
+//~ 
+        //~ if (windowNameInput.length() != 0)
+            //~ cv::imshow(windowNameInput, frame);
+//~ 
+        //~ if (callIt) {
+            //~ if (processo)
+                //~ processo(frame, output);
+            //~ else if (frameProcessor)
+                //~ frameProcessor->process(frame, output);
+//~ 
+        //~ } else {
+            //~ output = frame;
+        //~ }
+//~ 
+        //~ if (outputFile.length() != 0)
+            //~ writeNextFrame(output);
+//~ 
+        //~ if (windowNameOutput.length() != 0)
+            //~ cv::imshow(windowNameOutput, output);
+//~ 
+        //~ if (delay >= 0 && cv::waitKey(delay) >= 0)
+            //~ stopIt();
+//~ 
+        //~ if (frameToStop >= 0 && getFrameNumber() == frameToStop)
+            //~ stopIt();
+    //~ }
 }

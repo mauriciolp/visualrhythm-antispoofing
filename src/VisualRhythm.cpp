@@ -77,6 +77,16 @@ void VisualRhythm::setWidth(int width) {
     this->width = width;
 }
 
+// CUSTOM{
+int VisualRhythm::getHeight() {
+    return height;
+}
+
+int VisualRhythm::getWidth() {
+    return width;
+}
+// }
+
 void VisualRhythm::setOutputFileName(string output_filename) {
     this->output_filename = output_filename;
 }
@@ -139,9 +149,13 @@ void VisualRhythm::process(cv::Mat &frame, cv::Mat &output) {
     }
 
     if (this->visual_rhythm_type == 0) {
-        computeNoiseImage(image, noise);
-        computeFourierSpectrum(noise, espectrum);
-        computeVerticalVisualRhythm(espectrum, output);
+		// TODO *Create a flag for this new type of proccess, and mantain funcionalities*
+		// Only when i am sure that this is a interesting approach? YES
+		
+        //~ computeNoiseImage(image, noise);
+        //~ computeFourierSpectrum(noise, espectrum);
+        //~ computeVerticalVisualRhythm(espectrum, output);
+        computeVerticalVisualRhythm(image, output);
         this->current_frame++;
 
     } else if (this->visual_rhythm_type == 1) {
@@ -276,11 +290,21 @@ void VisualRhythm::computeVerticalVisualRhythm(Mat &frame, Mat &output) {
 
     int y = 0, x = 0, x_dst = 0;
 
-    x_dst = this->current_frame * this->width;
+	// Erro no x_dsc, pois ele usa o curret_frame e ele nao poderia passar dos iniciais
+    //~ x_dst = this->current_frame * this->width;
+    x_dst = (this->current_frame * this->width)%this->visual_rhythm.cols;
 
+	//~ cout << "\n\t x_dst: " << x_dst;
+
+	//~ cout << "\n\t output.rows: " << output.rows;
+	//~ cout << "\n\t output.cols: " << output.cols;
+	//~ 
+	//~ cout << "\n\t this->visual_rhythm.rows: " << this->visual_rhythm.rows;
+	//~ cout << "\n\t this->visual_rhythm.cols: " << this->visual_rhythm.cols;
+	
     for (y = 0; y < output.rows; y++) {
-        for (x = 0; x < output.cols; x++) {
-            this->visual_rhythm.at<uchar>(y, x_dst + x) = output.at<uchar>(y, x);
+		for (x = 0; x < output.cols; x++) {
+			this->visual_rhythm.at<uchar>(y, x_dst + x) = output.at<uchar>(y, x);
         }
     }
 }
