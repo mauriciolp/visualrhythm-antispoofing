@@ -36,7 +36,7 @@ void checkParameters(int argc, char **argv, int &visual_rhythm_type, int &frame_
         int &roi_width, string &filter, int &kernel_size, float &variance, string &color_space,
         string &video_filename, string &image_fname);
 
-// This function instantiate the video controller and visual rhythm objects 
+// This function instantiate the video controller and visual rhythm objects
 // using the values provided by the user by command line
 void computeVisualRhythm(int kernel_size, int visual_rhythm_type, int frame_number, int roi_width,
         string filter, float variance, string color_space, string video_filename, string image_fname);
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
             variance, color_space, video_filename, image_fname);
     cout << "Ok!" << endl;
 
-    computeVisualRhythm(kernel_size, visual_rhythm_type, frame_number, roi_width, filter, variance, color_space, 
+    computeVisualRhythm(kernel_size, visual_rhythm_type, frame_number, roi_width, filter, variance, color_space,
             video_filename, image_fname);
 
     return 0;
@@ -96,13 +96,13 @@ void computeVisualRhythm(int kernel_size, int visual_rhythm_type, int frame_numb
     VisualRhythm visualrhythm;
 
     processor.setInput(video_filename.c_str());
-    
+
     // CUSTOM {
     processor.setOutputFilePath(image_fname.c_str());
     // }
-    
+
     // TODO resize frame so Height is at 500
-    
+
     processor.setFrameProcessor(&visualrhythm);
     processor.setFrameToStop(frame_number);
     processor.setDelay(1000. / processor.getFrameRate());
@@ -117,7 +117,8 @@ void computeVisualRhythm(int kernel_size, int visual_rhythm_type, int frame_numb
     if (visual_rhythm_type == 0) {
         cout << "Extracting vertical visual rhythm ... ";
 
-        int height_for_vertical = processor.getFrameSize().height;
+        //~ int height_for_vertical = processor.getFrameSize().height;
+        int height_for_vertical = roi_width * frame_number;
         visualrhythm.setHeight(height_for_vertical);
         visualrhythm.createVisualRhythm(Mat(height_for_vertical, roi_width * frame_number, CV_8U));
         processor.run();

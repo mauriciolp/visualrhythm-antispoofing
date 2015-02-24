@@ -1,17 +1,17 @@
 /*------------------------------------------------------------------------------------------------*\
-    This file contains material supporting chapter 10 of the cookbook:  
-    Computer Vision Programming using the OpenCV Library. 
+    This file contains material supporting chapter 10 of the cookbook:
+    Computer Vision Programming using the OpenCV Library.
     by Robert Laganiere, Packt Publishing, 2011.
 
-    This program is free software; permission is hereby granted to use, copy, modify, 
-    and distribute this source code, or portions thereof, for any purpose, without fee, 
-    subject to the restriction that the copyright notice may not be removed 
-    or altered from any source or altered source distribution. 
-    The software is released on an as-is basis and without any warranties of any kind. 
-    In particular, the software is not guaranteed to be fault-tolerant or free from failure. 
-    The author disclaims all warranties with regard to this software, any use, 
+    This program is free software; permission is hereby granted to use, copy, modify,
+    and distribute this source code, or portions thereof, for any purpose, without fee,
+    subject to the restriction that the copyright notice may not be removed
+    or altered from any source or altered source distribution.
+    The software is released on an as-is basis and without any warranties of any kind.
+    In particular, the software is not guaranteed to be fault-tolerant or free from failure.
+    The author disclaims all warranties with regard to this software, any use,
     and any consequent failure, is purely the responsibility of the user.
- 
+
     Copyright (C) 2010-2011 Robert Laganiere, www.laganiere.name
 \*------------------------------------------------------------------------------------------------*/
 
@@ -203,52 +203,52 @@ void Video::run() {
 
     cv::Mat frame;
     cv::Mat output;
-    
+
     // CUSTOM {
-    int total_vr, curr_vr=1, stride=50, window_size=10, window_begin;
+    int total_vr, curr_vr=1, stride=50, window_size=frameToStop, window_begin;
     ostringstream convert;   // stream used for the conversion of int to str
     std::string output_file;
+
+    float aspect_ratio;
+    Size dsize;
+    VisualRhythm *vr_temp;
     // }
 
     if (!isOpened())
         return;
 
     stop = false;
-    
+
     // do a while already dividing getTotalFrameCount/50 = total_VR?
     // decision if should stop before last window is getTotalFrameCount%50 > 10 (window size)
     // curr_VR = 1
-    
+
     // *Create a flag for this new type of proccess, and mantain funcionalities*
-    
+
     total_vr = getTotalFrameCount()/stride;
     window_begin = (curr_vr-1)*stride + 1;
-    
-	//~ cout << "\n window_begin: " << window_begin << '\n';
-	//~ cout << "\n window_end: " << window_begin + window_size << '\n';
-    //~ 
-    //~ cout << "\n getTotalFrameCount: " << getTotalFrameCount() << '\n';
-    //~ cout << "\n stride: " << stride << '\n';
-    //~ cout << "\n total_vr: " << total_vr << '\n';
 
     while (curr_vr <= total_vr) {
-		
+
         if (!readNextFrame(frame))
             break;
-            
-        //~ cout << "\n getFrameNumber: " << getFrameNumber();
+
+        vr_temp = (VisualRhythm*) frameProcessor;
+
+        aspect_ratio = 1.*frame.size().height / frame.size().width;
+		//~ For Vertical only
+		dsize = Size(int(vr_temp->getWidth() * window_size / aspect_ratio), vr_temp->getWidth()*window_size);
+
+        cv::resize(frame,frame,dsize);
 
         if (windowNameInput.length() != 0)
             cv::imshow(windowNameInput, frame);
 
-		//~ cout << "\n Entrou";
 		// window_end = window_begin + window_size
-		
-		if (window_begin <= getFrameNumber() and getFrameNumber() 
+
+		if (window_begin <= getFrameNumber() and getFrameNumber()
 			< window_begin + window_size){
-				
-			//~ cout << "\n getFrameNumber: " << getFrameNumber();
-			
+
 			if (callIt) {
 				if (processo)
 					processo(frame, output);
@@ -257,9 +257,7 @@ void Video::run() {
 			} else {
 				output = frame;
 			}
-			
-			//~ cout << "\n Passou pelo if (callIt)";
-			
+
 			if (outputFile.length() != 0)
 				writeNextFrame(output);
 
@@ -269,20 +267,17 @@ void Video::run() {
 			if (delay >= 0 && cv::waitKey(delay) >= 0)
 				stopIt();
 		}
-		
+
 		if (getFrameNumber() >= window_begin + window_size){
-			//~ cout << "\n curr_vr: " << curr_vr << '\n';
-			//~ cout << "\n window_begin: " << window_begin << '\n';
-			//~ cout << "\n window_end: " << window_begin + window_size << '\n';
-			
+
 			convert.str("");
 			convert.clear();
 			convert << curr_vr;      // insert the textual representation of 'Number' in the characters in the stream
-			
+
 			// TODO format input_filename to get only the file.
 			// For evaluation only, the parameter input_filename must be the name exactly of the file
 			// a gambs would be replace the '/' by '_', so it could be created the file
-			
+
 			// Temporary workaround for replacing '/' for '_' in input file name
 			std::size_t found = input_filename.rfind('/');
 			while (found!=std::string::npos){
@@ -290,61 +285,57 @@ void Video::run() {
 				found = input_filename.rfind('/');
 			}
 
-			//~ cout << "\n image_fpath: " << image_fpath << '\n';
-			//~ cout << "\n input_filename: " << input_filename << '\n';
-			//~ cout << "\n curr_vr: " << convert.str() << '\n';
-			
 			// TODO insert curr_vr before extension of output OR static png
-			
+
 			output_file = image_fpath + "/" + input_filename + "_" + convert.str() + ".png";
-			
+
 			//~ cout << '\n' << output_file;
-			
+
 			VisualRhythm *vr;
-			
+
 			vr = (VisualRhythm*) frameProcessor;
-			
+
 			vr->setOutputFileName(output_file.c_str() );
 			vr->saveVisualRhythm();
-			
+
 			//~ cout << "\n vr->getHeight(): " << vr->getHeight() << '\n';
 			//~ cout << "\n vr->getWidth(): " << vr->getWidth() << '\n';
 			//~ cout << "\n frameToStop: " << frameToStop << '\n';
 
 			vr->createVisualRhythm(Mat(vr->getHeight(), vr->getWidth() * frameToStop, CV_8U));
-			
+
 			curr_vr++;
 			window_begin = (curr_vr-1)*stride + 1;
 		}
     }
-    
+
     //~ while (!isStopped()) {
-//~ 
+//~
         //~ if (!readNextFrame(frame))
             //~ break;
-//~ 
+//~
         //~ if (windowNameInput.length() != 0)
             //~ cv::imshow(windowNameInput, frame);
-//~ 
+//~
         //~ if (callIt) {
             //~ if (processo)
                 //~ processo(frame, output);
             //~ else if (frameProcessor)
                 //~ frameProcessor->process(frame, output);
-//~ 
+//~
         //~ } else {
             //~ output = frame;
         //~ }
-//~ 
+//~
         //~ if (outputFile.length() != 0)
             //~ writeNextFrame(output);
-//~ 
+//~
         //~ if (windowNameOutput.length() != 0)
             //~ cv::imshow(windowNameOutput, output);
-//~ 
+//~
         //~ if (delay >= 0 && cv::waitKey(delay) >= 0)
             //~ stopIt();
-//~ 
+//~
         //~ if (frameToStop >= 0 && getFrameNumber() == frameToStop)
             //~ stopIt();
     //~ }
