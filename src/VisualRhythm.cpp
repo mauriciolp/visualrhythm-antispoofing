@@ -143,15 +143,17 @@ void VisualRhythm::process(cv::Mat &frame, cv::Mat &output) {
         cv::cvtColor(frame, colorSpace, CV_BGR2Lab);
         cv::split(colorSpace, bandas);
         bandas[0].copyTo(image);
+    } else if (this->color_space.compare("bgr") == 0){
+        frame.copyTo(image);
     } else{
-        cout << "Erro:VisualRhythm::process():Invalid color space" << endl;
+        cout << "Error:VisualRhythm::process():Invalid color space" << endl;
         exit(EXIT_FAILURE);
     }
 
     if (this->visual_rhythm_type == 0) {
 		// TODO *Create a flag for this new type of proccess, and mantain funcionalities*
 		// Only when i am sure that this is a interesting approach? YES
-		
+
         //~ computeNoiseImage(image, noise);
         //~ computeFourierSpectrum(noise, espectrum);
         //~ computeVerticalVisualRhythm(espectrum, output);
@@ -282,6 +284,9 @@ void VisualRhythm::saveFourierSpectrum(string filenameInput,
 void VisualRhythm::computeVerticalVisualRhythm(Mat &frame, Mat &output) {
     Mat roi;
 
+	//~ cout << "\n\t frame.channels(): " << frame.channels();
+	//~ cout << "\n\t frame.depth(): " << frame.depth();
+
     roi = frame(
             Rect((frame.cols / 2) - (this->width / 2), 0, this->width, this->height));
 
@@ -290,21 +295,18 @@ void VisualRhythm::computeVerticalVisualRhythm(Mat &frame, Mat &output) {
 
     int y = 0, x = 0, x_dst = 0;
 
-	// Erro no x_dsc, pois ele usa o curret_frame e ele nao poderia passar dos iniciais
-    //~ x_dst = this->current_frame * this->width;
+	// Erro no x_dst, pois ele usa o curret_frame e ele nao poderia passar dos iniciais
+    //~ x_dst = this->current_frame * this->width; // Original
     x_dst = (this->current_frame * this->width)%this->visual_rhythm.cols;
 
-	//~ cout << "\n\t x_dst: " << x_dst;
-
-	//~ cout << "\n\t output.rows: " << output.rows;
-	//~ cout << "\n\t output.cols: " << output.cols;
-	//~ 
-	//~ cout << "\n\t this->visual_rhythm.rows: " << this->visual_rhythm.rows;
-	//~ cout << "\n\t this->visual_rhythm.cols: " << this->visual_rhythm.cols;
-	
     for (y = 0; y < output.rows; y++) {
 		for (x = 0; x < output.cols; x++) {
-			this->visual_rhythm.at<uchar>(y, x_dst + x) = output.at<uchar>(y, x);
+			//~ this->visual_rhythm.at<uchar>(y, x_dst + x) = output.at<uchar>(y, x); // Original
+
+			// MAURICIO For coloring the output
+			this->visual_rhythm.at<Vec3b>(y, x_dst + x, 0)[0] = output.at<Vec3b>(y, x, 0)[0];
+			this->visual_rhythm.at<Vec3b>(y, x_dst + x, 0)[1] = output.at<Vec3b>(y, x, 0)[1];
+			this->visual_rhythm.at<Vec3b>(y, x_dst + x, 0)[2] = output.at<Vec3b>(y, x, 0)[2];
         }
     }
 }

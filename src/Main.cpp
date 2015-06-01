@@ -80,6 +80,16 @@ int main(int argc, char** argv) {
             variance, color_space, video_filename, image_fname);
     cout << "Ok!" << endl;
 
+    cout << "kernel_size: " << kernel_size << endl;
+    cout << "visual_rhythm_type: " << visual_rhythm_type << endl;
+    cout << "frame_number: " << frame_number << endl;
+    cout << "roi_width: " << roi_width << endl;
+    cout << "filter: " << filter << endl;
+    cout << "variance: " << variance << endl;
+    cout << "color_space: " << color_space << endl;
+    cout << "video_filename: " << video_filename << endl;
+    cout << "image_fname: " << image_fname << endl;
+
     computeVisualRhythm(kernel_size, visual_rhythm_type, frame_number, roi_width, filter, variance, color_space,
             video_filename, image_fname);
 
@@ -116,15 +126,22 @@ void computeVisualRhythm(int kernel_size, int visual_rhythm_type, int frame_numb
 
     if (visual_rhythm_type == 0) {
         cout << "Extracting vertical visual rhythm ... ";
+        cout.flush();
 
         //~ int height_for_vertical = processor.getFrameSize().height;
         int height_for_vertical = roi_width * frame_number;
         visualrhythm.setHeight(height_for_vertical);
-        visualrhythm.createVisualRhythm(Mat(height_for_vertical, roi_width * frame_number, CV_8U));
+        //~ visualrhythm.createVisualRhythm(Mat(height_for_vertical, roi_width * frame_number, CV_8U));
+		//~ cout << "\n\t Mat.channels(): " << Mat(height_for_vertical, roi_width * frame_number, CV_8U).channels();
+
+        // TODO Try to instanciante a Mat with channels = 3
+        //~ type – Array type. Use CV_8UC1, ..., CV_64FC4 to create 1-4 channel matrices, or CV_8UC(n), ..., CV_64FC(n) to create multi-channel (up to CV_CN_MAX channels) matrices.
+        visualrhythm.createVisualRhythm(Mat(height_for_vertical, roi_width * frame_number, CV_8UC3));
+
         processor.run();
         cout << "Ok!" << endl;
 
-        cout << "Saving the generated visual rhythm ... ";
+        //~ cout << "Saving the generated visual rhythm ... ";
         //~ visualrhythm.saveVisualRhythm();
         cout << "Ok!" << endl;
 

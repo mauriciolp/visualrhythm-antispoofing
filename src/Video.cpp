@@ -200,7 +200,6 @@ void Video::setOutputFilePath(std::string image_fpath) {
 }
 
 void Video::run() {
-
     cv::Mat frame;
     cv::Mat output;
 
@@ -214,8 +213,10 @@ void Video::run() {
     VisualRhythm *vr_temp;
     // }
 
-    if (!isOpened())
+    if (!isOpened()){
+		cout << "*Unable to open video file* not ";
         return;
+	}
 
     stop = false;
 
@@ -224,6 +225,7 @@ void Video::run() {
     // curr_VR = 1
 
     // *Create a flag for this new type of proccess, and mantain funcionalities*
+    //~ cout << "getTotalFrameCount(): " << getTotalFrameCount() << endl;
 
     total_vr = getTotalFrameCount()/stride;
     window_begin = (curr_vr-1)*stride + 1;
@@ -248,6 +250,7 @@ void Video::run() {
 
 		if (window_begin <= getFrameNumber() and getFrameNumber()
 			< window_begin + window_size){
+			//~ cout << "getFrameNumber(): " << getFrameNumber() << endl;
 
 			if (callIt) {
 				if (processo)
@@ -264,7 +267,9 @@ void Video::run() {
 			if (windowNameOutput.length() != 0)
 				cv::imshow(windowNameOutput, output);
 
-			if (delay >= 0 && cv::waitKey(delay) >= 0)
+			// *IMPORTANT* Line commented because some videos would freeze here
+			if (delay > 0 && cv::waitKey(delay) >= 0)
+			//~ if (delay >= 0 && cv::waitKey(delay) >= 0)
 				stopIt();
 		}
 
@@ -302,7 +307,8 @@ void Video::run() {
 			//~ cout << "\n vr->getWidth(): " << vr->getWidth() << '\n';
 			//~ cout << "\n frameToStop: " << frameToStop << '\n';
 
-			vr->createVisualRhythm(Mat(vr->getHeight(), vr->getWidth() * frameToStop, CV_8U));
+			//~ vr->createVisualRhythm(Mat(vr->getHeight(), vr->getWidth() * frameToStop, CV_8U));
+			vr->createVisualRhythm(Mat(vr->getHeight(), vr->getWidth() * frameToStop, CV_8UC3));
 
 			curr_vr++;
 			window_begin = (curr_vr-1)*stride + 1;
